@@ -3,8 +3,9 @@ CFLAGS = -Wall -Wextra -I. -Irequest -Ifile_system
 
 # List all source files
 SRC = web_server.c \
+	main.c \
 	request/request.c \
-	main.c
+	file_system/file_explorer.c
 
 # Generate object file names
 OBJ = $(SRC:.c=.o)

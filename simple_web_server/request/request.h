@@ -1,3 +1,6 @@
+#ifndef REQUEST
+#define REQUEST
+
 #include "config.h"
 #include <stdlib.h>
 
@@ -19,4 +22,13 @@ struct HttpRequest
 };
 
 void parse_http_request(char *buffer, struct HttpRequest *request);
+
+/**
+ * Gets the relative path from the HTTP Request
+ * 
+ * Caution: must call free()
+ * 
+ */
 char *get_path(struct HttpRequest *request);
+
+#endif

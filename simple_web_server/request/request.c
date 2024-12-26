@@ -53,6 +53,23 @@ void parse_http_request(char *buffer, struct HttpRequest *request)
 
 char *get_path(struct HttpRequest *request)
 {
-    // Since the '/' must be removed
-    return (request->url+1); 
+    // Ensure the URL length does not exceed MAX_URL_LENGTH
+    size_t size = strnlen(request->url, MAX_URL_LENGTH);
+    
+    char *relative_path = malloc(size + 2); 
+    // +2 for '.' and '\0'
+    if (relative_path == NULL)
+    {
+        perror("get_path");
+        return NULL;
+    }
+
+    // Copy the URL into relative_path starting from index 1
+    strncpy(relative_path + 1, request->url, size);
+    
+    // Set the first character to '.' and ensure null termination
+    relative_path[0] = '.';
+    relative_path[size + 1] = '\0'; // Correctly place null terminator
+    
+    return relative_path;
 }

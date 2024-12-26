@@ -1,5 +1,6 @@
 #include "config.h"
 #include "web_server.h"
+#include "file_explorer.h"
 #include "request.h"
 
 #include <string.h>
@@ -24,26 +25,26 @@ Content-Type: text/html; charset=utf-8\r\n\
 \r\n\
 Hello World"
 
-
 void sigchld_handler(int s)
 {
     // waitpid() might overwrite errno, so we save and restore it:
     int saved_errno = errno;
     (void)s;
-    while (waitpid(-1, NULL, WNOHANG) > 0);
+    while (waitpid(-1, NULL, WNOHANG) > 0)
+        ;
     errno = saved_errno;
 }
 
 int create_server_socket()
 {
     int server_socket;
-    
+
     if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
         perror("socketfd");
         exit(EXIT_FAILURE);
     }
-    
+
     return server_socket;
 }
 
@@ -64,7 +65,7 @@ void configure_socket(int server_socket)
     sa.sa_handler = sigchld_handler; // reap all dead processes
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART;
-    
+
     if (sigaction(SIGCHLD, &sa, NULL) == -1)
     {
         perror("sigaction");
@@ -97,7 +98,7 @@ void accept_connections(int server_socket)
     {
         int client_socket;
         client_socket_size = sizeof(client_address);
-        
+
         if ((client_socket = accept(server_socket, (struct sockaddr *)&client_address, &client_socket_size)) == -1)
         {
             perror("accept");
@@ -130,26 +131,48 @@ void handle_client(int client_socket)
 {
     char buffer[BUFFER_SIZE] = {0};
     struct HttpRequest request;
-    
+
+    // Receive data from the client
     int valread = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-    
+
     if (valread < 0)
     {
         perror("recv");
         close(client_socket);
         return; // Exit the function on error
     }
-    
+
     buffer[valread] = '\0'; // Null-terminate the buffer
     printf("Received Request:\n%s\n", buffer);
 
-    // Parse the content
+    // Parse the HTTP request
     parse_http_request(buffer, &request);
 
-    // Hande the response
+    // Get the requested path
+    char *requested_path = get_path(&request);
+    
+    if (requested_path == NULL) {
+        fprintf(stderr, "Failed to get requested path\n");
+        close(client_socket);
+        return;
+    }
+
+    printf("Requested path: %s\n", requested_path);
+        
+    char *valid_file = get_valid_file(requested_path);
+    
+    if (valid_file != NULL) {
+        printf("Filepath: %s\n", valid_file);
+        free(valid_file); // Free the returned absolute path
+    } else {
+        fprintf(stderr, "Invalid file path\n");
+        free(requested_path); // Free requested_path if dynamically allocated
+        close(client_socket);
+        return;
+    }
 
     ssize_t bytes_sent = send(client_socket, RESPONSE_MESSAGE, sizeof(RESPONSE_MESSAGE) - 1, 0);
-    
+
     if (bytes_sent == -1)
     {
         perror("send");
@@ -159,5 +182,6 @@ void handle_client(int client_socket)
         fprintf(stderr, "Partial send\n");
     }
 
+    free(requested_path); // Free requested_path after use
     close(client_socket);
 }
