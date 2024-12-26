@@ -1,3 +1,6 @@
+#include "config.h"
+
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -12,10 +15,6 @@
 #include <netdb.h>
 #include <signal.h>
 
-#define PORT 8888
-#define BUFFER_SIZE 1024
-#define BACKLOG 5
-
 #define RESPONSE_MESSAGE "HTTP/1.1 200 OK\r\n\
 Access-Control-Allow-Origin: *\r\n\
 Connection: Keep-Alive\r\n\
@@ -27,12 +26,13 @@ void sigchld_handler(int s)
 {
     // waitpid() might overwrite errno, so we save and restore it:
     int saved_errno = errno;
+    (void)s;
 
-    while(waitpid(-1, NULL, WNOHANG) > 0);
+    while (waitpid(-1, NULL, WNOHANG) > 0)
+        ;
 
     errno = saved_errno;
 }
-
 
 int main(void)
 {
@@ -48,7 +48,6 @@ int main(void)
         exit(EXIT_FAILURE);
     }
 
-    
     // Reuse socket
     int opt = 1;
     if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof opt) == -1)
@@ -61,7 +60,8 @@ int main(void)
     sa.sa_handler = sigchld_handler; // reap all dead processes
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART;
-    if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+    if (sigaction(SIGCHLD, &sa, NULL) == -1)
+    {
         perror("sigaction");
         exit(EXIT_FAILURE);
     }
@@ -99,12 +99,16 @@ int main(void)
             close(server_socket);
 
             int valread = recv(client_socket, buffer, BUFFER_SIZE, 0);
+
             printf("Recieved Request:\n%s\n", buffer);
 
             ssize_t bytes_sent = send(client_socket, RESPONSE_MESSAGE, sizeof RESPONSE_MESSAGE, 0);
-            if (bytes_sent == -1) {
+            if (bytes_sent == -1)
+            {
                 perror("send");
-            } else if (bytes_sent < sizeof RESPONSE_MESSAGE) {
+            }
+            else if ((size_t)bytes_sent < sizeof RESPONSE_MESSAGE)
+            {
                 fprintf(stderr, "Partial send\n");
             }
 
