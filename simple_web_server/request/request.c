@@ -6,7 +6,9 @@
 
 void parse_http_header(char *buffer, struct HttpHeader *header)
 {
-    sscanf(buffer, "%s: %s", header->name, header->value);
+    // Seperate the header and value, example: 
+    // Set-Cookie: value
+    sscanf(buffer, "%99[^:]: %99[^\n]", header->name, header->value);
 }
 
 void parse_http_request(char *buffer, struct HttpRequest *request)
@@ -47,4 +49,10 @@ void parse_http_request(char *buffer, struct HttpRequest *request)
         request->body = NULL;
         request->body_length = 0;
     }
+}
+
+char *get_path(struct HttpRequest *request)
+{
+    // Since the '/' must be removed
+    return (request->url+1); 
 }

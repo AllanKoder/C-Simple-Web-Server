@@ -1,4 +1,5 @@
 #include "config.h"
+#include <stdlib.h>
 
 struct HttpHeader
 {
@@ -18,3 +19,4 @@ struct HttpRequest
 };
 
 void parse_http_request(char *buffer, struct HttpRequest *request);
+char *get_path(struct HttpRequest *request);

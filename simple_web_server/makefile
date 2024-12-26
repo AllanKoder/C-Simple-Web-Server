@@ -1,10 +1,10 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -I.
+CFLAGS = -Wall -Wextra -I. -Irequest -Ifile_system
 
 # List all source files
 SRC = web_server.c \
 	request/request.c \
-	socket/socket_helper.c
+	main.c
 
 # Generate object file names
 OBJ = $(SRC:.c=.o)
