@@ -1,4 +1,6 @@
+# VScode
 .vscode
-
+# Object Files
 *.o
-
+# Executable
+web_server
