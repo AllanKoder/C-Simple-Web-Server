@@ -1,7 +1,7 @@
 // Socket
 #define PORT 8888
-#define BUFFER_SIZE 1024
 #define BACKLOG 5
+#define BUFFER_SIZE 1024
 
 // Requests
 #define MAX_HEADERS 20

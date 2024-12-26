@@ -15,6 +15,9 @@
 #include <netdb.h>
 #include <signal.h>
 
+// Helpers
+#include "socket/socket_helper.h"
+
 #define RESPONSE_MESSAGE "HTTP/1.1 200 OK\r\n\
 Access-Control-Allow-Origin: *\r\n\
 Connection: Keep-Alive\r\n\
@@ -98,9 +101,23 @@ int main(void)
             printf("Child process %d created\n", getpid());
             close(server_socket);
 
-            int valread = recv(client_socket, buffer, BUFFER_SIZE, 0);
+            int valread = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
 
-            printf("Recieved Request:\n%s\n", buffer);
+            if (valread < 0)
+            {
+                perror("recv");
+                close(client_socket);
+                exit(EXIT_FAILURE);
+            }
+            else if (valread == 0)
+            {
+                fprintf(stderr, "Client disconnected unexpectedly\n");
+                close(client_socket);
+                exit(EXIT_SUCCESS);
+            }
+
+            buffer[valread] = '\0'; // Null-terminate the buffer
+            printf("Received Request:\n%s\n", buffer);
 
             ssize_t bytes_sent = send(client_socket, RESPONSE_MESSAGE, sizeof RESPONSE_MESSAGE, 0);
             if (bytes_sent == -1)
