@@ -11,7 +11,6 @@ char *get_valid_file(char *path) {
         perror("Failed to get current directory");
         return NULL;
     }
-    printf("%s", current_directory);
 
     // Resolve the absolute path of the requested file
     char *absolute_path = realpath(path, NULL);
@@ -36,3 +35,32 @@ char *get_valid_file(char *path) {
     return absolute_path; // Caller is responsible for freeing this
 }
 
+enum FileType get_file_type(char *path)
+{
+    char* file = strrchr(path, '/');
+    if (file == NULL)
+    {
+        return DIR;
+    }
+    char* file_type = strrchr(path, '.');
+    if (file_type == NULL)
+    {
+        return DIR;
+    }
+    else if (strcmp(file_type,"html"))
+    {
+        return HTML;
+    }
+    else if (strcmp(file_type,"txt"))
+    {
+        return TXT;
+    }
+    else if (strcmp(file_type,"cgi"))
+    {
+        return CGI;
+    }
+    else 
+    {
+        return OTHER;
+    }
+}

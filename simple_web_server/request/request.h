@@ -31,4 +31,7 @@ void parse_http_request(char *buffer, struct HttpRequest *request);
  */
 char *get_path(struct HttpRequest *request);
 
+void send_message(int socket, char *message);
+void send_404_page(int socket);
+
 #endif

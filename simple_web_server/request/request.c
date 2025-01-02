@@ -4,9 +4,11 @@
 #include "request.h"
 #include "config.h"
 
+#define PAGE_404 "HTTP/1.1 404 Not Found\r\n"
+
 void parse_http_header(char *buffer, struct HttpHeader *header)
 {
-    // Seperate the header and value, example: 
+    // Seperate the header and value, example:
     // Set-Cookie: value
     sscanf(buffer, "%99[^:]: %99[^\n]", header->name, header->value);
 }
@@ -55,8 +57,8 @@ char *get_path(struct HttpRequest *request)
 {
     // Ensure the URL length does not exceed MAX_URL_LENGTH
     size_t size = strnlen(request->url, MAX_URL_LENGTH);
-    
-    char *relative_path = malloc(size + 2); 
+
+    char *relative_path = malloc(size + 2);
     // +2 for '.' and '\0'
     if (relative_path == NULL)
     {
@@ -66,10 +68,30 @@ char *get_path(struct HttpRequest *request)
 
     // Copy the URL into relative_path starting from index 1
     strncpy(relative_path + 1, request->url, size);
-    
+
     // Set the first character to '.' and ensure null termination
     relative_path[0] = '.';
     relative_path[size + 1] = '\0'; // Correctly place null terminator
-    
+
     return relative_path;
+}
+
+void send_message(int socket, char *message)
+{
+    size_t length = strlen(message);
+    ssize_t bytes_sent = send(socket, message, length - 1, 0);
+
+    if (bytes_sent == -1)
+    {
+        perror("send");
+    }
+    else if ((size_t)bytes_sent < length - 1)
+    {
+        fprintf(stderr, "Partial send\n");
+    }
+}
+
+void send_404_page(int socket)
+{
+    send_message(socket, PAGE_404);
 }

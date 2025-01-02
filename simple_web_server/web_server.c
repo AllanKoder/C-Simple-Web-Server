@@ -159,29 +159,33 @@ void handle_client(int client_socket)
 
     printf("Requested path: %s\n", requested_path);
         
-    char *valid_file = get_valid_file(requested_path);
+    char *full_filepath = get_valid_file(requested_path);
     
-    if (valid_file != NULL) {
-        printf("Filepath: %s\n", valid_file);
-        free(valid_file); // Free the returned absolute path
+    if (full_filepath != NULL) {
+        printf("Filepath: %s\n", full_filepath);
     } else {
         fprintf(stderr, "Invalid file path\n");
-        free(requested_path); // Free requested_path if dynamically allocated
+        free(requested_path);
         close(client_socket);
         return;
     }
 
-    ssize_t bytes_sent = send(client_socket, RESPONSE_MESSAGE, sizeof(RESPONSE_MESSAGE) - 1, 0);
-
-    if (bytes_sent == -1)
+    // Determine File type, and perform logic for the following type
+    enum FileType file_type = get_file_type(full_filepath);
+    // Directory
+    // HTML
+    // Txt
+    // Cgi
+    // Other file (Download)
+    switch(file_type)
     {
-        perror("send");
-    }
-    else if ((size_t)bytes_sent < sizeof(RESPONSE_MESSAGE) - 1)
-    {
-        fprintf(stderr, "Partial send\n");
+        case DIR:
+            send_404_page(client_socket);
+            break;
+            
     }
 
     free(requested_path); // Free requested_path after use
+    free(full_filepath); // Free the returned absolute path
     close(client_socket);
 }
