@@ -1,4 +1,5 @@
 #include "file_explorer.h"
+#include "config.h"
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,7 +50,7 @@ enum FileType get_file_type(char *path)
     }
     else if (strcmp(file_type,"html"))
     {
-        return HTML;
+        return TXT;
     }
     else if (strcmp(file_type,"txt"))
     {
@@ -60,4 +61,31 @@ enum FileType get_file_type(char *path)
         return CGI;
     }
     return OTHER;
+}
+
+char *get_file_content(char *path)
+{
+    FILE *fd = fopen(path, "r");
+    char *response = malloc(MAX_BODY_SIZE+1);
+    long length;
+
+    if (fd == NULL)
+    {
+        return NULL;
+    }
+
+    if (fd)
+    {
+        fseek (fd, 0, SEEK_END);
+        length = ftell (fd);
+        fseek (fd, 0, SEEK_SET);
+        if (response)
+        {
+            fread(response, 1, length, fd);
+        }
+        fclose(fd);
+    }
+
+    printf("File content: %s\n", response);
+    return response;
 }

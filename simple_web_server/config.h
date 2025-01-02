@@ -13,5 +13,5 @@
 #define MAX_VERSION_LENGTH 10
 
 // Response
-
 #define MAX_RESPONSE_LENGTH 3000
+#define MAX_BODY_SIZE 2000

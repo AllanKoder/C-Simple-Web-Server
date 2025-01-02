@@ -170,10 +170,16 @@ void handle_client(int client_socket) {
             send_404_page(client_socket);
             break;
         case TXT:
-            send_text_html(client_socket, "Sample text response for TXT");
-            break;
-        case HTML:
-            send_text_html(client_socket, "<html><body><h1>Sample HTML Response</h1></body></html>");
+            char *text_content = get_file_content(full_filepath);
+            if (text_content == NULL)
+            {
+                send_text_html(client_socket, "Error opening file");
+            }
+            else
+            {
+                send_text_html(client_socket, text_content);
+            }
+            free(text_content);
             break;
         case CGI:
             // Handle CGI logic here

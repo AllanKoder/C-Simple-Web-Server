@@ -114,6 +114,6 @@ void send_text_html(int socket, const char *text) {
             "%sContent-Length: %lu\r\n\r\n%s", HEADERS_TEXT_HTML,
             content_length, text); // Construct response
 
-   printf("Responding web page:\n%s", response_buffer); 
+   printf("Responding web page:\n%s\n", response_buffer); 
    send_message(socket, response_buffer); 
 }
