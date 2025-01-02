@@ -31,7 +31,14 @@ void parse_http_request(char *buffer, struct HttpRequest *request);
  */
 char *get_path(struct HttpRequest *request);
 
-void send_message(int socket, char *message);
+void send_message(int socket, const char *message);
+
+
 void send_404_page(int socket);
+
+/**
+ * Sending documents to be rendered as html or text
+ */
+void send_text_html(int socket, const char *text);
 
 #endif

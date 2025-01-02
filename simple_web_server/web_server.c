@@ -18,13 +18,6 @@
 #include <netdb.h>
 #include <signal.h>
 
-#define RESPONSE_MESSAGE "HTTP/1.1 200 OK\r\n\
-Access-Control-Allow-Origin: *\r\n\
-Connection: Keep-Alive\r\n\
-Content-Type: text/html; charset=utf-8\r\n\
-\r\n\
-Hello World"
-
 void sigchld_handler(int s)
 {
     // waitpid() might overwrite errno, so we save and restore it:
@@ -127,19 +120,16 @@ void accept_connections(int server_socket)
     }
 }
 
-void handle_client(int client_socket)
-{
+void handle_client(int client_socket) {
     char buffer[BUFFER_SIZE] = {0};
     struct HttpRequest request;
 
     // Receive data from the client
     int valread = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-
-    if (valread < 0)
-    {
+    if (valread < 0) {
         perror("recv");
         close(client_socket);
-        return; // Exit the function on error
+        return; // Exit on error
     }
 
     buffer[valread] = '\0'; // Null-terminate the buffer
@@ -161,31 +151,42 @@ void handle_client(int client_socket)
         
     char *full_filepath = get_valid_file(requested_path);
     
-    if (full_filepath != NULL) {
-        printf("Filepath: %s\n", full_filepath);
-    } else {
+    if (full_filepath == NULL) {
         fprintf(stderr, "Invalid file path\n");
+        send_404_page(client_socket);
         free(requested_path);
         close(client_socket);
         return;
     }
 
-    // Determine File type, and perform logic for the following type
+    printf("File: %s\n", full_filepath);
+
+    // Determine File type and perform logic for each type
     enum FileType file_type = get_file_type(full_filepath);
-    // Directory
-    // HTML
-    // Txt
-    // Cgi
-    // Other file (Download)
-    switch(file_type)
-    {
+    printf("File type: %d\n", file_type);
+
+    switch(file_type) {
         case DIR:
             send_404_page(client_socket);
             break;
-            
+        case TXT:
+            send_text_html(client_socket, "Sample text response for TXT");
+            break;
+        case HTML:
+            send_text_html(client_socket, "<html><body><h1>Sample HTML Response</h1></body></html>");
+            break;
+        case CGI:
+            // Handle CGI logic here
+            break;
+        case OTHER:
+            // Handle other file types here
+            break;
+        default:
+            send_404_page(client_socket);
+            break;
     }
 
     free(requested_path); // Free requested_path after use
-    free(full_filepath); // Free the returned absolute path
-    close(client_socket);
+    free(full_filepath); // Free full_filepath after use
+    close(client_socket); // Close client socket connection
 }

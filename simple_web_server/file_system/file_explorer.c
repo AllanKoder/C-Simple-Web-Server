@@ -59,8 +59,5 @@ enum FileType get_file_type(char *path)
     {
         return CGI;
     }
-    else 
-    {
-        return OTHER;
-    }
+    return OTHER;
 }
