@@ -161,28 +161,23 @@ void handle_client(int client_socket, const char *directory) {
         return;
     }
 
+    char *filename = strrchr(full_filepath, '/')+1;
     printf("File: %s\n", full_filepath);
 
     // Determine File type and perform logic for each type
     enum FileType file_type = get_file_type(full_filepath);
     printf("File type: %d\n", file_type);
 
-    char *file_content = get_file_content(full_filepath);
+    char *file_content;
+    char *file_bytes;
     switch(file_type) {
         case DIR:
+            file_content = get_file_content(full_filepath, "r");
             send_404_page(client_socket);
+            free(file_content); // Free file content
             break;
         case TXT:
-            if (file_content == NULL)
-            {
-                send_html(client_socket, "Error opening file");
-            }
-            else
-            {
-                send_html(client_socket, file_content);
-            }
-            break;
-        case HTML:
+            file_content = get_file_content(full_filepath, "r");
             if (file_content == NULL)
             {
                 send_text(client_socket, "Error opening file");
@@ -191,20 +186,36 @@ void handle_client(int client_socket, const char *directory) {
             {
                 send_text(client_socket, file_content);
             }
+            free(file_content); // Free file content
             break;
+        case HTML:
+            file_content = get_file_content(full_filepath, "r");
+            if (file_content == NULL)
+            {
+                send_html(client_socket, "Error opening file");
+            }
+            else
+            {
+                send_html(client_socket, file_content);
+            }
+            free(file_content); // Free file content
             break;
         case CGI:
             // Handle CGI logic here
             break;
+        case PNG:
+            break;
         case OTHER:
+            file_bytes = get_file_content(full_filepath, "rb");
             // Handle other file types here
+            send_download(client_socket, filename, file_bytes);
+            free(file_bytes);
             break;
         default:
             send_404_page(client_socket);
             break;
     }
 
-    free(file_content); // Free file content
     free(requested_file); // Free requested_file after use
     free(full_filepath); // Free full_filepath after use
     close(client_socket); // Close client socket connection

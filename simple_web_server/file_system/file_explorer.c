@@ -47,29 +47,33 @@ enum FileType get_file_type(char *path)
     {
         return DIR;
     }
-    char *file_type = strrchr(path, '.');
+    char *file_type = strrchr(path, '.')+1;
     if (file_type == NULL)
     {
         return DIR;
     }
-    else if (strcmp(file_type, "html"))
+    else if (strcmp(file_type, "png") == 0)
+    {
+        return PNG;
+    }
+    else if (strcmp(file_type, "html") == 0)
     {
         return HTML;
     }
-    else if (strcmp(file_type, "txt"))
+    else if (strcmp(file_type, "txt") == 0)
     {
         return TXT;
     }
-    else if (strcmp(file_type, "cgi"))
+    else if (strcmp(file_type, "cgi") == 0)
     {
         return CGI;
     }
     return OTHER;
 }
 
-char *get_file_content(char *path)
+char *get_file_content(char *path, const char *options)
 {
-    FILE *fd = fopen(path, "r");
+    FILE *fd = fopen(path, options);
     char *response;
     if (fd)
     {
