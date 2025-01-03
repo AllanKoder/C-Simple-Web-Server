@@ -29,7 +29,7 @@ void parse_http_request(char *buffer, struct HttpRequest *request);
  * Caution: must call free()
  * 
  */
-char *get_path(struct HttpRequest *request);
+char *get_requested_file(struct HttpRequest *request, const char *directory);
 
 void send_message(int socket, const char *message);
 

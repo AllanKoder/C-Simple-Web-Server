@@ -10,7 +10,7 @@ enum FileType {
     OTHER,
 };
 
-char *get_valid_file(char *path);
+char *get_valid_path(char *path, const char *serving_dir);
 enum FileType get_file_type(char *path);
 char *get_file_content(char *path);
 

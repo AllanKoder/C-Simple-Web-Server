@@ -62,26 +62,29 @@ void parse_http_request(char *buffer, struct HttpRequest *request)
     }
 }
 
-char *get_path(struct HttpRequest *request)
+char *get_requested_file(struct HttpRequest *request, const char *directory)
 {
     // Ensure the URL length does not exceed MAX_URL_LENGTH
-    size_t size = strnlen(request->url, MAX_URL_LENGTH);
+    size_t url_length = strnlen(request->url, MAX_URL_LENGTH);
+    size_t directory_length = strlen(directory);
 
-    char *relative_path = malloc(size + 2);
-    // +2 for '.' and '\0'
+    size_t total_length = url_length + directory_length + 2; // +2 for '\0' and /
+    
+    char *relative_path = malloc(total_length);
     if (relative_path == NULL)
     {
         perror("get_path");
         return NULL;
     }
 
+    // Set the prefix to directory
+    strncpy(relative_path, directory, directory_length);
+    relative_path[directory_length] = '/';
+
     // Copy the URL into relative_path starting from index 1
-    strncpy(relative_path + 1, request->url, size);
+    strncpy(relative_path+directory_length, request->url, url_length);
 
-    // Set the first character to '.' and ensure null termination
-    relative_path[0] = '.';
-    relative_path[size + 1] = '\0'; // Correctly place null terminator
-
+    relative_path[total_length-1] = '\0';
     return relative_path;
 }
 

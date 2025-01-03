@@ -4,3 +4,6 @@
 *.o
 # Executable
 web_server
+
+# Directory
+example_dir

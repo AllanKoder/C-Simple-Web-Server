@@ -82,7 +82,7 @@ void configure_socket(int server_socket)
     }
 }
 
-void accept_connections(int server_socket)
+void accept_connections(int server_socket, const char *directory)
 {
     struct sockaddr_in client_address;
     socklen_t client_socket_size;
@@ -103,7 +103,7 @@ void accept_connections(int server_socket)
         {
             // Child process
             close(server_socket); // Close the listening socket in the child process
-            handle_client(client_socket);
+            handle_client(client_socket, directory);
             exit(EXIT_SUCCESS);
         }
         else if (pid > 0)
@@ -120,7 +120,7 @@ void accept_connections(int server_socket)
     }
 }
 
-void handle_client(int client_socket) {
+void handle_client(int client_socket, const char *directory) {
     char buffer[BUFFER_SIZE] = {0};
     struct HttpRequest request;
 
@@ -138,23 +138,23 @@ void handle_client(int client_socket) {
     // Parse the HTTP request
     parse_http_request(buffer, &request);
 
-    // Get the requested path
-    char *requested_path = get_path(&request);
+    // Get the requested file
+    char *requested_file = get_requested_file(&request, directory);
     
-    if (requested_path == NULL) {
-        fprintf(stderr, "Failed to get requested path\n");
+    if (requested_file == NULL) {
+        fprintf(stderr, "Failed to get requested file\n");
         close(client_socket);
         return;
     }
 
-    printf("Requested path: %s\n", requested_path);
+    printf("Requested file: %s\n", requested_file);
         
-    char *full_filepath = get_valid_file(requested_path);
+    char *full_filepath = get_valid_path(requested_file, directory);
     
     if (full_filepath == NULL) {
         fprintf(stderr, "Invalid file path\n");
         send_404_page(client_socket);
-        free(requested_path);
+        free(requested_file);
         close(client_socket);
         return;
     }
@@ -192,7 +192,7 @@ void handle_client(int client_socket) {
             break;
     }
 
-    free(requested_path); // Free requested_path after use
+    free(requested_file); // Free requested_file after use
     free(full_filepath); // Free full_filepath after use
     close(client_socket); // Close client socket connection
 }
