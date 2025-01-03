@@ -169,15 +169,15 @@ void handle_client(int client_socket, const char *directory) {
     printf("File type: %d\n", file_type);
 
     char *file_content;
-    char *file_bytes;
+    struct FileContent file_bytes;
     switch(file_type) {
         case DIR:
-            file_content = get_file_content(full_filepath, "r");
+            file_content = get_string_content(full_filepath);
             send_404_page(client_socket);
             free(file_content); // Free file content
             break;
         case TXT:
-            file_content = get_file_content(full_filepath, "r");
+            file_content = get_string_content(full_filepath);
             if (file_content == NULL)
             {
                 send_text(client_socket, "Error opening file");
@@ -189,7 +189,7 @@ void handle_client(int client_socket, const char *directory) {
             free(file_content); // Free file content
             break;
         case HTML:
-            file_content = get_file_content(full_filepath, "r");
+            file_content = get_string_content(full_filepath);
             if (file_content == NULL)
             {
                 send_html(client_socket, "Error opening file");
@@ -204,12 +204,19 @@ void handle_client(int client_socket, const char *directory) {
             // Handle CGI logic here
             break;
         case PNG:
+            file_bytes = get_bytes_content(full_filepath);
+            if (file_bytes.bytes != NULL)
+            {
+                // Handle other file types here
+                send_png(client_socket, filename, file_bytes);
+                free(file_bytes.bytes);
+            }
             break;
         case OTHER:
-            file_bytes = get_file_content(full_filepath, "rb");
+            file_bytes = get_bytes_content(full_filepath);
             // Handle other file types here
             send_download(client_socket, filename, file_bytes);
-            free(file_bytes);
+            free(file_bytes.bytes);
             break;
         default:
             send_404_page(client_socket);

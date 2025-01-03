@@ -3,7 +3,8 @@
 
 #include <stdbool.h>
 
-enum FileType {
+enum FileType
+{
     DIR,
     TXT,
     HTML,
@@ -12,8 +13,15 @@ enum FileType {
     OTHER,
 };
 
-char *get_valid_path(char *path, const char *serving_dir);
+struct FileContent
+{
+    long size;
+    char *bytes;
+};
+
+char *get_valid_path(char *path, const char *path_to_serving_dir);
 enum FileType get_file_type(char *path);
-char *get_file_content(char *path, const char *options);
+char *get_string_content(char *path);
+struct FileContent get_bytes_content(char *path);
 
 #endif

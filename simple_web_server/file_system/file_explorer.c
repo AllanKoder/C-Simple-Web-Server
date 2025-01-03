@@ -71,29 +71,62 @@ enum FileType get_file_type(char *path)
     return OTHER;
 }
 
-char *get_file_content(char *path, const char *options)
-{
-    FILE *fd = fopen(path, options);
-    char *response;
-    if (fd)
-    {
+char *get_string_content(char *path) {
+    FILE *fd = fopen(path, "r");
+    char *response = NULL; // Initialize response to NULL
+
+    if (fd) {
         fseek(fd, 0, SEEK_END);
         long length = ftell(fd);
         fseek(fd, 0, SEEK_SET);
-        response = malloc(length + 1);
 
-        if (fd == NULL)
-        {
-            return NULL;
+        response = malloc(length + 1);
+        if (response) {
+            size_t read_bytes = fread(response, 1, length, fd);
+            response[read_bytes] = '\0'; // Null-terminate only if read was successful
         }
-        if (response)
-        {
-            fread(response, 1, length, fd);
-        }
-        response[length] = 0;
+
         fclose(fd);
+    } else {
+        perror("Error opening file");
     }
 
-    printf("File content: %s\n", response);
-    return response;
+    if (response) {
+        printf("File content: %s\n", response);
+    } else {
+        printf("Failed to read file content.\n");
+    }
+
+    return response; // Return allocated memory or NULL
+}
+
+struct FileContent get_bytes_content(char *path) {
+    FILE *fd = fopen(path, "rb");
+    char *response = NULL;
+    struct FileContent content;
+
+    if (fd) {
+        fseek(fd, 0, SEEK_END);
+        long length = ftell(fd);
+        fseek(fd, 0, SEEK_SET);
+
+        response = malloc(length + 1); // Allocate memory for binary data
+        if (response) {
+            size_t read_bytes = fread(response, 1, length, fd);
+            content.bytes = response; // Assign bytes only if read was successful
+            content.size = length;
+        } else {
+            content.bytes = NULL;
+            content.size = 0;
+        }
+
+        fclose(fd);
+    } else {
+        perror("Error opening file");
+        content.bytes = NULL;
+        content.size = 0;
+    }
+
+    printf("File content size: %ld\n", content.size); // Print size instead of bytes
+    return content; // Return struct with size and bytes
 }

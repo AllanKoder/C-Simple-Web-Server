@@ -22,11 +22,11 @@ void send_text(int socket, const char *text);
 /**
  * Send the response for displaying a png
  */
-void send_png(int socket, const char *bytes);
+void send_png(int socket, const char *filename, struct FileContent content);
 
 /**
  * Send the response for downloading the file
  */
-void send_download(int socket, const char *filename, const char *bytes);
+void send_download(int socket, const char *filename, struct FileContent content);
 
 #endif

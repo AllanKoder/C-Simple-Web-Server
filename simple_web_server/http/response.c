@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include "request.h"
+#include "file_explorer.h"
 #include "config.h"
 
 // Networks
@@ -11,7 +12,8 @@
 #define HEADERS_404 "HTTP/1.1 404 Not Found\r\n"
 #define HEADERS_HTML "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n"
 #define HEADERS_TEXT "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n"
-#define HEADERS_DOWNLOAD "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\n"
+#define HEADERS_DOWNLOAD "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Disposition: attachment; filename=\"%s\"\r\n"
+#define HEADERS_PNG "HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Disposition: inline; filename=\"%s\"\r\n"
 
 void send_message(int socket, const char *message)
 {
@@ -33,12 +35,12 @@ void send_404_page(int socket)
     send_message(socket, HEADERS_404);
 }
 
-void send_response(int socket, const char *headers, const char *content, size_t content_length) {
+void send_http_response(int socket, const char *headers, const char *content, size_t content_length) {
     size_t max_size = MAX_HEADERS_SIZE + content_length + 1;
     char *response_buffer = malloc(max_size);
 
     if (response_buffer == NULL) {
-        perror("send_response malloc");
+        perror("send_http_response malloc");
         return;
     }
 
@@ -53,22 +55,32 @@ void send_response(int socket, const char *headers, const char *content, size_t 
 
 void send_html(int socket, const char *html) {
     size_t content_length = strlen(html);
-    send_response(socket, HEADERS_HTML, html, content_length);
+    send_http_response(socket, HEADERS_HTML, html, content_length);
 }
 
 void send_text(int socket, const char *text) {
     size_t content_length = strlen(text);
-    send_response(socket, HEADERS_TEXT, text, content_length);
+    send_http_response(socket, HEADERS_TEXT, text, content_length);
 }
 
-void send_download(int socket, const char *filename, const char *bytes) {
-    size_t content_length = strlen(bytes);
+void send_png(int socket, const char *filename, struct FileContent content) {
+    size_t content_length = content.size;
     char headers[MAX_HEADERS_SIZE];
 
     snprintf(headers, sizeof(headers),
-             HEADERS_DOWNLOAD 
-             "Content-Disposition: attachment; filename=\"%s\"\r\n",
+             HEADERS_PNG,
              filename); // Construct headers
 
-    send_response(socket, headers, bytes, content_length);
+    send_http_response(socket, headers, content.bytes, content_length);
+}
+
+void send_download(int socket, const char *filename, struct FileContent content) {
+    size_t content_length = content.size;
+    char headers[MAX_HEADERS_SIZE];
+
+    snprintf(headers, sizeof(headers),
+             HEADERS_DOWNLOAD,
+             filename); // Construct headers
+
+    send_http_response(socket, headers, content.bytes, content_length);
 }
