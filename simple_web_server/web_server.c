@@ -205,11 +205,12 @@ void handle_client(int client_socket, const char *directory) {
             break;
         case PNG:
             file_bytes = get_bytes_content(full_filepath);
-            if (file_bytes.bytes != NULL)
-            {
-                // Handle other file types here
+            if (file_bytes.bytes) {
                 send_png(client_socket, filename, file_bytes);
-                free(file_bytes.bytes);
+                free(file_bytes.bytes); // Free allocated memory after sending
+            } else {
+                printf("Failed to read PNG file.\n");
+                send_404_page(client_socket); // Handle error appropriately
             }
             break;
         case OTHER:
