@@ -6,6 +6,7 @@
 enum FileType {
     DIR,
     TXT,
+    HTML,
     CGI,
     OTHER,
 };

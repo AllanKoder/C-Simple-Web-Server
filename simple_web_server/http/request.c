@@ -69,7 +69,7 @@ char *get_requested_file(struct HttpRequest *request, const char *directory)
     size_t directory_length = strlen(directory);
 
     size_t total_length = url_length + directory_length + 2; // +2 for '\0' and /
-    
+
     char *relative_path = malloc(total_length);
     if (relative_path == NULL)
     {
@@ -82,41 +82,9 @@ char *get_requested_file(struct HttpRequest *request, const char *directory)
     relative_path[directory_length] = '/';
 
     // Copy the URL into relative_path starting from index 1
-    strncpy(relative_path+directory_length, request->url, url_length);
+    strncpy(relative_path + directory_length, request->url, url_length);
 
-    relative_path[total_length-1] = '\0';
+    relative_path[total_length - 1] = '\0';
     return relative_path;
 }
 
-void send_message(int socket, const char *message)
-{
-    size_t length = strlen(message);
-    ssize_t bytes_sent = send(socket, message, length, 0);
-
-    if (bytes_sent == -1)
-    {
-        perror("send");
-    }
-    else if ((size_t)bytes_sent < length)
-    {
-        fprintf(stderr, "Partial send\n");
-    }
-}
-
-void send_404_page(int socket)
-{
-    send_message(socket, HEADERS_404);
-}
-
-void send_text_html(int socket, const char *text) {
-    char response_buffer[MAX_RESPONSE_LENGTH];
-    
-    size_t content_length = strlen(text);
-
-   snprintf(response_buffer, sizeof(response_buffer), 
-            "%sContent-Length: %lu\r\n\r\n%s", HEADERS_TEXT_HTML,
-            content_length, text); // Construct response
-
-   printf("Responding web page:\n%s\n", response_buffer); 
-   send_message(socket, response_buffer); 
-}

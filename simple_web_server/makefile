@@ -1,10 +1,11 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -I. -Irequest -Ifile_system
+CFLAGS = -Wall -Wextra -I. -Ihttp -Ifile_system
 
 # List all source files
 SRC = web_server.c \
 	main.c \
-	request/request.c \
+	http/request.c \
+	http/response.c \
 	file_system/file_explorer.c
 
 # Generate object file names

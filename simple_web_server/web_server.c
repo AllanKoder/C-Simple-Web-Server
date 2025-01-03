@@ -2,6 +2,7 @@
 #include "web_server.h"
 #include "file_explorer.h"
 #include "request.h"
+#include "response.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -153,8 +154,9 @@ void handle_client(int client_socket, const char *directory) {
     
     if (full_filepath == NULL) {
         fprintf(stderr, "Invalid file path\n");
-        send_404_page(client_socket);
-        free(requested_file);
+        send_404_page(client_socket); // Send file not found
+
+        free(requested_file); // Free the requested file
         close(client_socket);
         return;
     }
@@ -165,21 +167,31 @@ void handle_client(int client_socket, const char *directory) {
     enum FileType file_type = get_file_type(full_filepath);
     printf("File type: %d\n", file_type);
 
+    char *file_content = get_file_content(full_filepath);
     switch(file_type) {
         case DIR:
             send_404_page(client_socket);
             break;
         case TXT:
-            char *text_content = get_file_content(full_filepath);
-            if (text_content == NULL)
+            if (file_content == NULL)
             {
-                send_text_html(client_socket, "Error opening file");
+                send_html(client_socket, "Error opening file");
             }
             else
             {
-                send_text_html(client_socket, text_content);
+                send_html(client_socket, file_content);
             }
-            free(text_content);
+            break;
+        case HTML:
+            if (file_content == NULL)
+            {
+                send_text(client_socket, "Error opening file");
+            }
+            else
+            {
+                send_text(client_socket, file_content);
+            }
+            break;
             break;
         case CGI:
             // Handle CGI logic here
@@ -192,6 +204,7 @@ void handle_client(int client_socket, const char *directory) {
             break;
     }
 
+    free(file_content); // Free file content
     free(requested_file); // Free requested_file after use
     free(full_filepath); // Free full_filepath after use
     close(client_socket); // Close client socket connection

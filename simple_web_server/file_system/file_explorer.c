@@ -54,7 +54,7 @@ enum FileType get_file_type(char *path)
     }
     else if (strcmp(file_type, "html"))
     {
-        return TXT;
+        return HTML;
     }
     else if (strcmp(file_type, "txt"))
     {
