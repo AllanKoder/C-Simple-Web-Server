@@ -8,9 +8,13 @@ The simple web server is for HTML, text documents, PNGS, and downloading every o
 
 ## Running
 
-`make`
+```
+make
+```
 
-`./web_server </path/to/dir>`
+```
+./web_server </path/to/dir>
+```
 
 ## UI
 
