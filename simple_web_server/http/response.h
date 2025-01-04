@@ -29,4 +29,9 @@ void send_png(int socket, const char *filename, struct FileContent content);
  */
 void send_download(int socket, const char *filename, struct FileContent content);
 
+/**
+ * Send the directory html page
+ */
+void send_directory_page(int socket, const struct FilesList *files);
+
 #endif

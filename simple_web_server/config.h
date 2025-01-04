@@ -13,4 +13,4 @@
 #define MAX_VERSION_LENGTH 10
 
 // Response
-#define MAX_HEADERS_SIZE 3000
+#define MAX_HEADERS_SIZE 1024

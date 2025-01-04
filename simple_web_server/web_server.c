@@ -121,13 +121,15 @@ void accept_connections(int server_socket, const char *directory)
     }
 }
 
-void handle_client(int client_socket, const char *directory) {
+void handle_client(int client_socket, const char *directory)
+{
     char buffer[BUFFER_SIZE] = {0};
     struct HttpRequest request;
 
     // Receive data from the client
     int valread = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-    if (valread < 0) {
+    if (valread < 0)
+    {
         perror("recv");
         close(client_socket);
         return; // Exit on error
@@ -141,18 +143,20 @@ void handle_client(int client_socket, const char *directory) {
 
     // Get the requested file
     char *requested_file = get_requested_file(&request, directory);
-    
-    if (requested_file == NULL) {
+
+    if (requested_file == NULL)
+    {
         fprintf(stderr, "Failed to get requested file\n");
         close(client_socket);
         return;
     }
 
     printf("Requested file: %s\n", requested_file);
-        
+
     char *full_filepath = get_valid_path(requested_file, directory);
-    
-    if (full_filepath == NULL) {
+
+    if (full_filepath == NULL)
+    {
         fprintf(stderr, "Invalid file path\n");
         send_404_page(client_socket); // Send file not found
 
@@ -161,7 +165,7 @@ void handle_client(int client_socket, const char *directory) {
         return;
     }
 
-    char *filename = strrchr(full_filepath, '/')+1;
+    char *filename = strrchr(full_filepath, '/') + 1;
     printf("File: %s\n", full_filepath);
 
     // Determine File type and perform logic for each type
@@ -169,62 +173,70 @@ void handle_client(int client_socket, const char *directory) {
     printf("File type: %d\n", file_type);
 
     char *file_content;
+    struct FilesList *file_names;
     struct FileContent file_bytes;
-    switch(file_type) {
-        case DIR:
-            file_content = get_string_content(full_filepath);
-            send_404_page(client_socket);
-            free(file_content); // Free file content
-            break;
-        case TXT:
-            file_content = get_string_content(full_filepath);
-            if (file_content == NULL)
-            {
-                send_text(client_socket, "Error opening file");
-            }
-            else
-            {
-                send_text(client_socket, file_content);
-            }
-            free(file_content); // Free file content
-            break;
-        case HTML:
-            file_content = get_string_content(full_filepath);
-            if (file_content == NULL)
-            {
-                send_html(client_socket, "Error opening file");
-            }
-            else
-            {
-                send_html(client_socket, file_content);
-            }
-            free(file_content); // Free file content
-            break;
-        case CGI:
-            // Handle CGI logic here
-            break;
-        case PNG:
-            file_bytes = get_bytes_content(full_filepath);
-            if (file_bytes.bytes) {
-                send_png(client_socket, filename, file_bytes);
-                free(file_bytes.bytes); // Free allocated memory after sending
-            } else {
-                printf("Failed to read PNG file.\n");
-                send_404_page(client_socket); // Handle error appropriately
-            }
-            break;
-        case OTHER:
-            file_bytes = get_bytes_content(full_filepath);
-            // Handle other file types here
-            send_download(client_socket, filename, file_bytes);
-            free(file_bytes.bytes);
-            break;
-        default:
-            send_404_page(client_socket);
-            break;
+    switch (file_type)
+    {
+    case DIRECTORY:
+        file_names = get_directory_files(full_filepath);
+        if (file_names != NULL) {
+            printf("sending..\n");
+            send_directory_page(client_socket, file_names);
+            free_files_list(file_names);
+        }
+        break;
+    case TXT:
+        file_content = get_string_content(full_filepath);
+        if (file_content == NULL)
+        {
+            send_text(client_socket, "Error opening file");
+        }
+        else
+        {
+            send_text(client_socket, file_content);
+        }
+        free(file_content); // Free file content
+        break;
+    case HTML:
+        file_content = get_string_content(full_filepath);
+        if (file_content == NULL)
+        {
+            send_html(client_socket, "Error opening file");
+        }
+        else
+        {
+            send_html(client_socket, file_content);
+        }
+        free(file_content); // Free file content
+        break;
+    case CGI:
+        // Handle CGI logic here
+        break;
+    case PNG:
+        file_bytes = get_bytes_content(full_filepath);
+        if (file_bytes.bytes)
+        {
+            send_png(client_socket, filename, file_bytes);
+            free(file_bytes.bytes); // Free allocated memory after sending
+        }
+        else
+        {
+            printf("Failed to read PNG file.\n");
+            send_404_page(client_socket); // Handle error appropriately
+        }
+        break;
+    case OTHER:
+        file_bytes = get_bytes_content(full_filepath);
+        // Handle other file types here
+        send_download(client_socket, filename, file_bytes);
+        free(file_bytes.bytes);
+        break;
+    default:
+        send_404_page(client_socket);
+        break;
     }
 
     free(requested_file); // Free requested_file after use
-    free(full_filepath); // Free full_filepath after use
+    free(full_filepath);  // Free full_filepath after use
     close(client_socket); // Close client socket connection
 }

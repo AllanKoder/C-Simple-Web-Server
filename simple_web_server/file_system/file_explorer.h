@@ -2,10 +2,12 @@
 #define FILE_EXPLORER
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 enum FileType
 {
-    DIR,
+    NONE,
+    DIRECTORY,
     TXT,
     HTML,
     PNG,
@@ -19,9 +21,17 @@ struct FileContent
     char *bytes;
 };
 
-char *get_valid_path(char *path, const char *path_to_serving_dir);
-enum FileType get_file_type(char *path);
-char *get_string_content(char *path);
-struct FileContent get_bytes_content(char *path);
+struct FilesList
+{
+    size_t length;
+    char *file_names[];
+};
+
+struct FilesList *get_directory_files(const char *path);
+void free_files_list(struct FilesList *files_list);
+char *get_valid_path(const char *path, const char *path_to_serving_dir);
+enum FileType get_file_type(const char *path);
+char *get_string_content(const char *path);
+struct FileContent get_bytes_content(const char *path);
 
 #endif
