@@ -122,9 +122,10 @@ struct FilesList *get_directory_files(const char *path) {
         return NULL; // Return NULL on error
     }
 
-    // First pass: Count the number of files
+    // First pass: Count the number of files and directories
     while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_type == DT_REG) { // Only count regular files
+        // Skip special entries "." and ".."
+        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
             count++;
         }
     }
@@ -134,41 +135,64 @@ struct FilesList *get_directory_files(const char *path) {
     if (files_list == NULL) {
         perror("malloc");
         closedir(dir);
-        return NULL; // Return NULL on error
+        return NULL; 
     }
 
     // Reset directory stream to read file names
     rewinddir(dir);
 
-    // Second pass: Store file names
+    // Second pass: Store file and directory names
     size_t index = 0;
     while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_type == DT_REG) { // Only store regular files
-            files_list->file_names[index] = strdup(entry->d_name); // Duplicate file name
+        // Skip special entries "." and ".."
+        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+            // Check if it's a directory
+            if (entry->d_type == DT_DIR) {
+                // Allocate memory for directory name plus trailing slash
+                size_t dir_name_length = strlen(entry->d_name) + 2; // +1 for '/' +1 for '\0'
+                files_list->file_names[index] = malloc(dir_name_length);
+                if (files_list->file_names[index] == NULL) {
+                    perror("malloc");
+                    closedir(dir);
+                    for (size_t i = 0; i < index; i++) { 
+                        free(files_list->file_names[i]);
+                    }
+                    free(files_list); 
+                    return NULL;      
+                }
+                snprintf(files_list->file_names[index], dir_name_length, "%s/", entry->d_name); // Append '/'
+            } else { // It's a regular file
+                files_list->file_names[index] = strdup(entry->d_name); // Duplicate file name
+            }
+
             if (files_list->file_names[index] == NULL) {
                 perror("strdup");
                 closedir(dir);
-                for (size_t i = 0; i < index; i++) { // Free previously allocated names
+                for (size_t i = 0; i < index; i++) { 
                     free(files_list->file_names[i]);
                 }
-                free(files_list); // Free previously allocated FilesList
-                return NULL;      // Return NULL on error
+                free(files_list); 
+                return NULL;      
             }
-            printf("File name: %s\n", files_list->file_names[index]);
+            printf("File/Directory name: %s\n", files_list->file_names[index]);
             index++;
         }
     }
 
-    closedir(dir);              // Close the directory
-    files_list->length = count; // Set the length of the file list
+    closedir(dir);
+    files_list->length = count;
 
-    printf("Returned with %zu files.\n", files_list->length);
-    return files_list; // Return populated FilesList
+    printf("Returned with %zu entries.\n", files_list->length);
+    return files_list; 
 }
 
-void free_files_list(struct FilesList *files_list) {
-    if (files_list != NULL) {
-        for (size_t i = 0; i < files_list->length; i++) {
+
+void free_files_list(struct FilesList *files_list)
+{
+    if (files_list != NULL)
+    {
+        for (size_t i = 0; i < files_list->length; i++)
+        {
             free(files_list->file_names[i]); // Free each file name
         }
         free(files_list); // Free the FilesList structure itself
