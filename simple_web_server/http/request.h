@@ -21,6 +21,8 @@ struct HttpRequest
     size_t body_length;
 };
 
+void url_decode(char *src, char *dest);
+
 void parse_http_request(char *buffer, struct HttpRequest *request);
 
 /**

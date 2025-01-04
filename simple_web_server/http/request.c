@@ -1,8 +1,9 @@
+#include "request.h"
+#include "config.h"
 #include <string.h>
 #include <stdio.h>
 #include <stddef.h>
-#include "request.h"
-#include "config.h"
+#include <ctype.h>
 
 // Networks
 #include <arpa/inet.h>
@@ -15,6 +16,31 @@ Connection: Keep-Alive\r\n\
 Content-Type: text/html; charset=utf-8\r\n\
 "
 
+void url_decode(char *src, char *dest) {
+    while (*src) {
+        if (*src == '%') {
+            // Convert hex value to character
+            if (isxdigit(*(src + 1)) && isxdigit(*(src + 2))) {
+                int value;
+                sscanf(src + 1, "%2x", &value);
+                *dest++ = (char)value;
+                src += 3; // Move past the %xx
+            } else {
+                // If not valid, just copy the '%'
+                *dest++ = *src++;
+            }
+        } else if (*src == '+') {
+            // Convert '+' to space
+            *dest++ = ' ';
+            src++;
+        } else {
+            *dest++ = *src++;
+        }
+    }
+    *dest = '\0'; // Null-terminate the destination string
+}
+
+
 void parse_http_header(char *buffer, struct HttpHeader *header)
 {
     // Seperate the header and value, example:
@@ -22,26 +48,29 @@ void parse_http_header(char *buffer, struct HttpHeader *header)
     sscanf(buffer, "%99[^:]: %99[^\n]", header->name, header->value);
 }
 
-void parse_http_request(char *buffer, struct HttpRequest *request)
-{
+void parse_http_request(char *buffer, struct HttpRequest *request) {
     char *line = strtok(buffer, "\r\n");
 
     // Parse request line
     sscanf(line, "%s %s %s", request->method, request->url, request->version);
 
+    // Decode the URL
+    char decoded_url[2048]; // Buffer for decoded URL
+    url_decode(request->url, decoded_url);
+    strncpy(request->url, decoded_url, sizeof(request->url) - 1);
+    request->url[sizeof(request->url) - 1] = '\0'; // Ensure null termination
+
     // Parse headers
     request->header_count = 0;
-    while ((line = strtok(NULL, "\r\n")) != NULL && line[0] != '\0')
-    {
-        if (request->header_count < MAX_HEADERS)
-        {
+    while ((line = strtok(NULL, "\r\n")) != NULL && line[0] != '\0') {
+        if (request->header_count < MAX_HEADERS) {
             // Parse Header
             size_t header_size = MAX_HEADER_NAME_LENGTH + MAX_HEADER_VALUE_LENGTH;
             char header[header_size];
             strncpy(header, line, header_size - 1);
             header[header_size - 1] = '\0';
 
-            // Turn it to a Header Struct
+            // Turn it into a Header Struct
             parse_http_header(header, &request->headers[request->header_count]);
 
             request->header_count++;
@@ -50,13 +79,10 @@ void parse_http_request(char *buffer, struct HttpRequest *request)
 
     // Find and set body
     request->body = strstr(buffer, "\r\n\r\n");
-    if (request->body)
-    {
+    if (request->body) {
         request->body += 4; // Move past the \r\n\r\n
         request->body_length = strlen(request->body);
-    }
-    else
-    {
+    } else {
         request->body = NULL;
         request->body_length = 0;
     }
