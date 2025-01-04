@@ -209,9 +209,6 @@ void handle_client(int client_socket, const char *directory)
         }
         free(file_content); // Free file content
         break;
-    case CGI:
-        // Handle CGI logic here
-        break;
     case PNG:
         file_bytes = get_bytes_content(full_filepath);
         if (file_bytes.bytes)

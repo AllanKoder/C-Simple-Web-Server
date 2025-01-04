@@ -102,10 +102,6 @@ enum FileType get_file_type(const char *path)
     {
         return TXT;
     }
-    else if (strcmp(file_type, "cgi") == 0)
-    {
-        return CGI;
-    }
 
     return OTHER; // Return OTHER for unrecognized extensions
 }

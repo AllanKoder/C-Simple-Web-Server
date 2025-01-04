@@ -11,7 +11,6 @@ enum FileType
     TXT,
     HTML,
     PNG,
-    CGI,
     OTHER,
 };
 
