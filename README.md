@@ -1,6 +1,6 @@
 # Simple C Web Server Network Project
 
-This is a relatively simple web server that serves files. 
+This is a relatively simple web server that serves files, it is **not** RFC 9110 compliant.
 
 The project idea was inspired by [Beej's guide to Networking Concepts](https://beej.us/guide/bgnet0/), and with help from [Beej's Guide to Network Programming](https://beej.us/guide/bgnet/)
 
